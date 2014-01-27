@@ -1,0 +1,56 @@
+defaultTasks "build"
+
+allprojects {
+    apply plugin: 'idea'
+
+    group = 'name.mitterdorfer.perlock'
+    version = '0.1.0-SNAPSHOT'
+}
+
+idea {
+    project {
+        languageLevel = '1.7'
+    }
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+//see http://www.gradle.org/docs/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html
+configurations.all {
+    resolutionStrategy.failOnVersionConflict()
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
+
+    repositories {
+        mavenCentral()
+    }
+
+    ext.slf4jVersion = '1.7.5'
+    ext.log4jVersion = '1.2.17'
+    ext.junitVersion = '4.11'
+    ext.mockitoVersion = '1.9.5'
+
+
+    dependencies {
+        compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+
+        testCompile group: 'junit', name: 'junit', version: junitVersion
+        testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+        //provide log4j binding for test and demo code only!
+        testRuntime group: 'org.slf4j', name: 'slf4j-log4j12', version: slf4jVersion
+        testRuntime group: 'log4j', name: 'log4j', version: log4jVersion
+    }
+}

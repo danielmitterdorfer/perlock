@@ -1,0 +1,44 @@
+archivesBaseName = 'perlock-core'
+
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+ext.packaging = 'jar'
+
+jar {
+    manifest {
+        attributes(
+            "Implementation-Title": "Perlock Path Watcher",
+            "Implementation-Version": version,
+            "Author": "Daniel Mitterdorfer <daniel@mitterdorfer.name>",
+        )
+    }
+}
+
+task coreJavadocs(type: Javadoc, dependsOn: javadoc) {
+    //otherwise no documentation is created at all
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
+    //exclude the impl package as it only consists of internal implementation classes which should not be used by clients
+    //TODO: Figure out how to exclude this package without getting build warnings
+    //excludes = ["**/impl/**"] as Set
+}
+
+
+task javadocJar(type: Jar, dependsOn: coreJavadocs) {
+    classifier = 'javadoc'
+    from 'build/docs/groovydoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+

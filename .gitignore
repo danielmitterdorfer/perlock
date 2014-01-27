@@ -1,0 +1,33 @@
+# Java: https://github.com/github/gitignore/blob/master/Java.gitignore
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# IDEA: https://github.com/github/gitignore/blob/master/Global/IntelliJ.gitignore
+
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Mac OS X: https://github.com/github/gitignore/blob/master/Global/OSX.gitignore
+
+.DS_Store
+.AppleDouble
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Gradle
+.gradle/
+**/build/
+out/
