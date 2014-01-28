@@ -22,6 +22,37 @@ Current solutions have either a very cumbersome and error-prone API (JDK 7 Watch
 
 # Getting Started
 
+## Installation
+
+Perlock is currently not available as a binary. To use perlock, follow these steps:
+
+1. Clone the repo: `git clone https://github.com/danielmitterdorfer/perlock.git`
+2. Build perlock: `gradle install`
+
+Perlock is then installed to your local repo. You can use the library as follows in your Gradle build scripts:
+
+```groovy
+repositories {
+    mavenLocal()
+}
+
+dependencies {
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.1.0-SNAPSHOT'
+}
+```
+
+or alternatively via Maven.
+
+```xml
+<dependency>
+    <groupId>name.mitterdorfer.perlock</groupId>
+    <artifactId>perlock-core</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+## Usage
+
 The API allows to create recursive or non-recursive path watchers.
 
 Clients have to implement the callback interface `PathChangeListener` or extend the convenience base class `AbstractPathChangeListener`, for example:
