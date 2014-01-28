@@ -24,20 +24,13 @@ Current solutions have either a very cumbersome and error-prone API (JDK 7 Watch
 
 ## Installation
 
-Perlock is currently not available as a binary. To use perlock, follow these steps:
+Perlock is available in Maven Central.
 
-1. Clone the repo: `git clone https://github.com/danielmitterdorfer/perlock.git`
-2. Build perlock: `gradle install`
-
-Perlock is then installed to your local repo. You can use the library as follows in your Gradle build scripts:
+You can use it with Gradle:
 
 ```groovy
-repositories {
-    mavenLocal()
-}
-
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.1.0-SNAPSHOT'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.1.0'
 }
 ```
 
@@ -47,9 +40,14 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
+
+Alternatively, to build perlock yourself, follow these steps:
+
+1. Clone the repo: `git clone https://github.com/danielmitterdorfer/perlock.git`
+2. Build perlock: `gradle install`
 
 ## Usage
 
