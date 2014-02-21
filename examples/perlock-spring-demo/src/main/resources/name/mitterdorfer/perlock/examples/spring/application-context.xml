@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        Boilerplate needed to have Spring convert Strings to java.nio.Path instances (Spring has currently no explicit
+        converter String -> Path).
+
+        This allows us to define the path to watch using its String representation later.
+    -->
+    <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="name.mitterdorfer.perlock.spring.PathConverter"/>
+            </set>
+        </property>
+    </bean>
+
+    <!--
+        Use a dedicated FactoryBean to create a PathWatcherFactory. This is needed to ensure we create only one
+        PathWatcherFactory for multiple PathWatcher instances.
+    -->
+    <bean id="pathWatcherFactory" class="name.mitterdorfer.perlock.spring.PathWatcherFactoryFactoryBean">
+        <constructor-arg name="executorService">
+            <!-- Provide a dedicated thread pool for path watching -->
+            <bean id="pathWatchExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean">
+                <property name="corePoolSize" value="5" />
+                <property name="maxPoolSize" value="10" />
+                <property name="queueCapacity" value="5" />
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <!--
+        Use a custom FactoryBean implementation as an adapter between Perlock's PathWatcherFactory and Spring.
+    -->
+    <bean id="incomingMessagesWatcher" class="name.mitterdorfer.perlock.spring.PathWatcherFactoryBean">
+        <constructor-arg name="pathWatcherFactory" ref="pathWatcherFactory" />
+        <constructor-arg name="rootPath" value="/tmp" />
+        <constructor-arg name="watchRecursively" value="false"/>
+        <constructor-arg name="pathChangeListener">
+            <bean class="name.mitterdorfer.perlock.examples.spring.MessageDispatcher">
+                <constructor-arg name="executor">
+                    <!--
+                        Provide another dedicated thread pool for message handling. This way the pools for path watching
+                        and message handling can be properly configured (possibly in a different way...).
+                    -->
+                    <bean id="messageHandlingExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean">
+                        <!-- we expect to take message handling thread much longer, hence we need to have enough threads around... -->
+                        <property name="corePoolSize" value="20" />
+                        <property name="maxPoolSize" value="70" />
+                        <property name="queueCapacity" value="30" />
+                    </bean>
+                </constructor-arg>
+            </bean>
+
+        </constructor-arg>
+    </bean>
+</beans>

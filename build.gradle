@@ -1,10 +1,37 @@
 defaultTasks "build"
 
-allprojects {
+configure(allprojects) {
+    group = 'name.mitterdorfer.perlock'
+    version = '0.2.0'
+
+    ext.slf4jVersion = '1.7.5'
+    ext.log4jVersion = '1.2.17'
+    ext.junitVersion = '4.11'
+    ext.mockitoVersion = '1.9.5'
+
+    apply plugin: 'java'
     apply plugin: 'idea'
 
-    group = 'name.mitterdorfer.perlock'
-    version = '0.1.0'
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+
+        testCompile group: 'junit', name: 'junit', version: junitVersion
+        testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+        //provide log4j binding for test and demo code only!
+        testRuntime group: 'org.slf4j', name: 'slf4j-log4j12', version: slf4jVersion
+        testRuntime group: 'log4j', name: 'log4j', version: log4jVersion
+    }
+
 }
 
 idea {
@@ -21,36 +48,132 @@ idea {
 }
 
 //see http://www.gradle.org/docs/current/dsl/org.gradle.api.artifacts.ResolutionStrategy.html
-configurations.all {
-    resolutionStrategy.failOnVersionConflict()
-}
+//configurations.all {
+//    resolutionStrategy.failOnVersionConflict()
+//}
 
-subprojects {
-    apply plugin: 'java'
-
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
-
-    compileJava.options.encoding = 'UTF-8'
-    compileTestJava.options.encoding = 'UTF-8'
-
-    repositories {
-        mavenCentral()
+configure(subprojects) { subproject ->
+    jar {
+        manifest {
+            attributes(
+                    "Implementation-Title": subproject.name,
+                    "Implementation-Version": subproject.version,
+                    "Author": "Daniel Mitterdorfer <daniel@mitterdorfer.name>",
+            )
+        }
     }
 
-    ext.slf4jVersion = '1.7.5'
-    ext.log4jVersion = '1.2.17'
-    ext.junitVersion = '4.11'
-    ext.mockitoVersion = '1.9.5'
 
+    javadoc {
+        options.author = true
+        options.header = project.name
+        //options.links(project.ext.javadocLinks)
 
-    dependencies {
-        compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+        logging.captureStandardError LogLevel.INFO
+        logging.captureStandardOutput LogLevel.INFO // suppress "## warnings" message
 
-        testCompile group: 'junit', name: 'junit', version: junitVersion
-        testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
-        //provide log4j binding for test and demo code only!
-        testRuntime group: 'org.slf4j', name: 'slf4j-log4j12', version: slf4jVersion
-        testRuntime group: 'log4j', name: 'log4j', version: log4jVersion
+        //exclude 'impl' package as they only consists of internal implementation classes which should not be used by clients
+        excludes = ["**/impl/**"] as Set
+    }
+
+    task sourcesJar(type: Jar, dependsOn:classes) {
+        classifier = "sources"
+        from sourceSets.main.allJava.srcDirs
+        include "**/*.java"
+    }
+
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    artifacts {
+        archives jar
+        archives javadocJar
+        archives sourcesJar
+    }
+}
+
+configure([project(":perlock-core"), project(":perlock-spring")]) { subproject ->
+    // This build script is based on https://github.com/GradleFx/GradleFx/blob/master/build.gradle
+
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    def isDevBuild
+    def isCiBuild
+    def isReleaseBuild
+
+    def sonatypeRepositoryUrl
+
+//set build variables based on build type
+    // hasProperty check has to be done on subproject - see http://issues.gradle.org/browse/GRADLE-1826
+    if(subproject.hasProperty("release")) {
+        isReleaseBuild = true
+        sonatypeRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    } else if (subproject.hasProperty("ci")) {
+        isCiBuild = true
+        version += "-SNAPSHOT"
+        sonatypeRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+    } else {
+        version += "-SNAPSHOT"
+        isDevBuild = true
+    }
+
+//********* artifact signing *********
+    if(isReleaseBuild) {
+        signing {
+            sign configurations.archives
+        }
+    } else {
+        task signArchives {
+            // do nothing
+        }
+    }
+
+    uploadArchives {
+        repositories {
+            if (isDevBuild) {
+                mavenLocal()
+            }
+            else {
+                mavenDeployer {
+                    if(isReleaseBuild) {
+                        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                    }
+
+                    repository(url: sonatypeRepositoryUrl) {
+                        authentication(userName: sonatypeUsername, password: sonatypePassword)
+                    }
+                    pom.project {
+                        name subproject.name
+                        description subproject.description
+                        packaging 'jar'
+                        url 'https://github.com/danielmitterdorfer/perlock'
+
+                        scm {
+                            url 'scm:git@github.com:danielmitterdorfer/perlock.git'
+                            connection 'scm:git@github.com:danielmitterdorfer/perlock.git'
+                            developerConnection 'scm:git@github.com:danielmitterdorfer/perlock.git'
+                        }
+
+                        licenses {
+                            license {
+                                name 'The Apache Software License, Version 2.0'
+                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                distribution 'repo'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id 'danielmitterdorfer'
+                                name 'Daniel Mitterdorfer'
+                            }
+                        }
+                    }
+                }
+           }
+        }
     }
 }

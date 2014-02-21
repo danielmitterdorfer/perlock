@@ -1,11 +1,11 @@
-perlock
+Perlock
 ========
 
 Perlock (short for Path Sherlock) provides a simple and sane path watching API on top of the JDK 7 WatchService API.
 
 # Motivation
 
-Have you ever tried to find out whether some file or directory has been changed during the lifetime of a Java program? Then perlock is for you. Perlock is especially suited for the following tasks:
+Have you ever tried to find out whether some file or directory has been changed during the lifetime of a Java program? Then Perlock is for you. Perlock is especially suited for the following tasks:
 
 * Check whether a removable drive was mounted and performing some custom action, for example starting a backup script.
 * Watching a file for external changes in a text editor.
@@ -15,8 +15,8 @@ Have you ever tried to find out whether some file or directory has been changed 
 
 Current solutions have either a very cumbersome and error-prone API (JDK 7 WatchService) or are based on polling (Apache Commons VFS). Perlock avoids both problems and tries very hard to get out of your way:
 
-* **No hidden magic:** The perlock API openly communicates that path watching requires background threads instead of silently creating them in the background. Perlock is also just a wrapper on top of the WatchService API. As such, it shares all capabilities and restrictions of WatchService, such as efficient path watching as a capability but also lack of support for watching network drives as a restriction.
-* **Minimalistic:** perlock itself is very lightweight both in its implementation and in its dependencies. The only required runtime dependency is the slf4j-api.
+* **No hidden magic:** The Perlock API openly communicates that path watching requires background threads instead of silently creating them in the background. Perlock is also just a wrapper on top of the WatchService API. As such, it shares all capabilities and restrictions of WatchService, such as efficient path watching as a capability but also lack of support for watching network drives as a restriction.
+* **Minimalistic:** Perlock itself is very lightweight both in its implementation and in its dependencies. The only required runtime dependency is the slf4j-api.
 * **Easy to use:** The standard use-case (watching paths for creation, modification and deletion) just requires you to implement a single callback interface.
 * **Robust and efficient:** Perlock builds on top of the standard WatchService API of the JDK. On many platforms the WatchService implementation uses kernel facilities (such as kqueue or inotify) for file system watching which is very fast and efficient.
 
@@ -30,7 +30,7 @@ You can use it with Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.1.0'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.2.0'
 }
 ```
 
@@ -40,14 +40,29 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-core</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
-Alternatively, to build perlock yourself, follow these steps:
+You can also use the Perlock-Spring integration to ease usage of Perlock in Spring based applications.
 
-1. Clone the repo: `git clone https://github.com/danielmitterdorfer/perlock.git`
-2. Build perlock: `gradle install`
+With Gradle:
+
+```groovy
+dependencies {
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-spring', version: '0.2.0'
+}
+```
+
+or alternatively via Maven.
+
+```xml
+<dependency>
+    <groupId>name.mitterdorfer.perlock</groupId>
+    <artifactId>perlock-spring</artifactId>
+    <version>0.2.0</version>
+</dependency>
+```
 
 ## Usage
 
@@ -73,19 +88,22 @@ PathWatcher watcher = pathWatchers.createRecursiveWatcher(someRootPath, new Simp
 watcher.start();
 ```
 
-The `examples` directory contains a very small sample application that demonstrates recursive path watching in the class `PathWatcherDemo`.
+The `examples` directory contains a very small sample application that demonstrates recursive path watching in the class `PathWatcherDemo`. It also contains as `SpringPathWatcherDemo` which demonstrates how to use the Perlock-Spring integration.
 
 # Prerequisites
 
-Perlock is extremely lightweight and just relies on slf4j-api as runtime dependency. You might want to provide a suitable slf4j implementation but that is up to you. Additionally, JRE 7 is required.
+Perlock is extremely lightweight. The `perlock-core` artifact just relies on slf4j-api as runtime dependency. You might want to provide a suitable slf4j implementation but that is up to you. Additionally, JRE 7 is required.
 
 # Building Perlock
 
-Perlock requires Gradle to build. To create all necessary artifacts just clone the repository and type `gradle`.
+Perlock requires Gradle to build. Follow these steps to build Perlock yourself:
+
+1. Clone the repo: `git clone https://github.com/danielmitterdorfer/perlock.git`
+2. Build Perlock: `gradle install`
 
 # Caveats
 
-There are a few caveats you should be aware of when using perlock:
+There are a few caveats you should be aware of when using Perlock:
 
 * The JDK 7 WatchService API is platform dependent. Therefore, path watching might be slower on platforms where WatchService falls back to polling (for example JDK 7 in Mac OS X). For a more detailed description of `WatchService` please see its [Javadoc](http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html).
 * The root path that has to exist when the corresponding `PathWatcher` is started.
@@ -93,9 +111,9 @@ There are a few caveats you should be aware of when using perlock:
 
 # Alternatives
 
-There are a few alternatives to perlock:
+There are a few alternatives to Perlock:
 
-* [JDK 7 WatchService API](http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html): This is the raw API perlock is built on.
+* [JDK 7 WatchService API](http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html): This is the raw API Perlock is built on.
 * [jpathwatch](http://jpathwatch.sourceforge.net/): It closely resembles the JDK 7 watch service API but requires just JDK 5.
 * [jnotify](http://jnotify.sourceforge.net/): It has quite a simple API but relies on a native library.
 * [Apache Commons VFS](http://commons.apache.org/proper/commons-vfs/): Commons VFS is a file system abstraction and as such heavyweight if all you need is path watching. Commons VFS has a DefaultFileMonitor which performs path watching via polling.

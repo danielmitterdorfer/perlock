@@ -1,0 +1,1 @@
+description = 'Perlock (short for Path Sherlock) provides a simple and sane path watching API on top of the JDK 7 WatchService API'

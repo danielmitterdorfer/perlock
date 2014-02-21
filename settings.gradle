@@ -1,2 +1,6 @@
-include 'core'
-include 'examples'
+rootProject.name = "perlock"
+
+include 'perlock-core'
+include 'perlock-spring'
+include 'examples:perlock-simple-demo'
+include 'examples:perlock-spring-demo'

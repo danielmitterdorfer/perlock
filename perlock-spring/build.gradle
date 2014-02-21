@@ -1,0 +1,11 @@
+description = 'Perlock integration to Spring'
+
+dependencies {
+    compile project(':perlock-core')
+    //we use the lowest possible version of Spring here. We rely on FactoryBean (since the beginning) and the Converter infrastructure (since 3.0.0)
+    compile (group: 'org.springframework', name: 'spring-context', version: '3.1.0.RELEASE') {
+        exclude module: 'commons-logging'
+    }
+    //To get rid of commons-logging -> leave that to the user of the lib?
+    runtime group: 'org.slf4j', name: 'jcl-over-slf4j', version: slf4jVersion
+}
