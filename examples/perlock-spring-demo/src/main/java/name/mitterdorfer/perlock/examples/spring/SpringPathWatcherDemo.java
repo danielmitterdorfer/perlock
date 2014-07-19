@@ -27,6 +27,7 @@ public class SpringPathWatcherDemo {
         pathWatcher.start();
 
         LOGGER.info("Press any key to stop the demo");
+        //noinspection ResultOfMethodCallIgnored
         System.in.read();
 
         // On exit, the container will automatically shutdown any thread pools. All code should be implemented to
