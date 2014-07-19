@@ -1,0 +1,27 @@
+archivesBaseName = 'perlock-multipath-demo'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        //TODO: Update library as soon as it is available. Gradle issues "The TaskContainer.add() method has been
+        // deprecated and is scheduled to be removed in Gradle 2.0. Please use the create() method instead."
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+    }
+}
+
+apply plugin: 'fatjar'
+
+fatJar {
+    manifest {
+        attributes("Main-Class": "name.mitterdorfer.perlock.examples.MultiPathWatcherDemo")
+    }
+}
+
+dependencies {
+    compile project(':perlock-core')
+    runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: slf4jVersion
+    runtime group: 'log4j', name: 'log4j', version: log4jVersion
+}
