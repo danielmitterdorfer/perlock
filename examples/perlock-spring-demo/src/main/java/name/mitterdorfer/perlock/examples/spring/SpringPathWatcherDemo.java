@@ -12,7 +12,7 @@ import java.io.IOException;
  *
  * To try the demo, start the application and then issue the following command in a shell in the "/tmp" directory:
  *
- * "touch hello{1,2,3}.xml && sleep 2 && touch hello{4,5,6}.xml"
+ * "touch hello{1,2,3}.xml &amp;&amp; sleep 2 &amp;&amp; touch hello{4,5,6}.xml"
  *
  */
 public class SpringPathWatcherDemo {

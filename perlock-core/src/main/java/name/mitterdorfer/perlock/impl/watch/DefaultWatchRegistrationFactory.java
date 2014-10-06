@@ -12,6 +12,8 @@ import java.util.Map;
  * THIS IS AN INTERNAL IMPLEMENTATION CLASS AND DOES NOT BELONG TO THE API. DO NOT USE IT DIRECTLY.
  */
 public final class DefaultWatchRegistrationFactory implements WatchRegistrationFactory {
+    public static final DefaultWatchRegistrationFactory INSTANCE = new DefaultWatchRegistrationFactory();
+
     @Override
     public WatchRegistrationStrategy createRegistrationStrategy(Map<WatchKey, Path> keys, boolean recursiveWatcher) {
         if (!recursiveWatcher) {

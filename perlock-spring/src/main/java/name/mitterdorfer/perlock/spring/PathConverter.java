@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * A simple custom converter from String -> Path as Spring currently provides none. It has to be registered with Spring in the
- * application context file.
+ * A simple custom converter from <code>String</code> to <code>Path</code> as Spring currently provides none. It has to
+ * be registered with Spring in the application context file.
  */
 public final class PathConverter implements Converter<String, Path> {
     @Override

@@ -1,8 +1,8 @@
 package name.mitterdorfer.perlock;
 
 import name.mitterdorfer.perlock.impl.WatchServicePathWatcher;
-import name.mitterdorfer.perlock.impl.watch.DefaultWatchRegistrationFactory;
 import name.mitterdorfer.perlock.impl.util.Preconditions;
+import name.mitterdorfer.perlock.impl.watch.DefaultWatchRegistrationFactory;
 import name.mitterdorfer.perlock.impl.watch.WatchRegistrationFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +21,11 @@ public final class PathWatcherFactory {
 
     private final WatchRegistrationFactory watchRegistrationFactory;
 
+    private final LifecycleListener globalLifecycleListener;
+
     /**
-     * Creates a new <code>PathWatcherFactory</code> instance.
+     * Creates a new <code>PathWatcherFactory</code> instance. Exceptions within path watchers will be handled
+     * internally without notification of clients.
      *
      * @param executorService An <code>ExecutorService</code> that will be used to create watcher threads. Clients
      *                        should expect that the <code>PathWatcherFactory</code> will request a new thread from the
@@ -31,15 +34,34 @@ public final class PathWatcherFactory {
      *                        for all path watchers. Must not be null. Must not be shutdown.
      */
     public PathWatcherFactory(ExecutorService executorService) {
-        this(executorService, new DefaultWatchRegistrationFactory());
+        this(executorService, DefaultWatchRegistrationFactory.INSTANCE, NoOpLifecycleListener.INSTANCE);
+    }
+
+    /**
+     * Creates a new <code>PathWatcherFactory</code> instance. All lifecycle events for path watchers will be reported
+     * to the provided lifecycle listener.
+     *
+     * @param executorService   An <code>ExecutorService</code> that will be used to create watcher threads. Clients
+     *                          should expect that the <code>PathWatcherFactory</code> will request a new thread from
+     *                          the executorService for each new <code>PathWatcher</code> (even if the same path is
+     *                          watched twice). It is up to clients to provide an executor service that can create
+     *                          enough threads for all path watchers. Must not be null. Must not be shutdown.
+     * @param lifecycleListener A <code>LifeCycleListener</code> implementation that is called every time a lifecycle
+     *                          event happens for a path watcher. Must not be null.
+     */
+    public PathWatcherFactory(ExecutorService executorService, LifecycleListener lifecycleListener) {
+        this(executorService, DefaultWatchRegistrationFactory.INSTANCE, lifecycleListener);
     }
 
     //internal constructor needed for testing
-    protected PathWatcherFactory(ExecutorService executorService, WatchRegistrationFactory watchRegistrationFactory) {
+    protected PathWatcherFactory(ExecutorService executorService,
+                                 WatchRegistrationFactory watchRegistrationFactory,
+                                 LifecycleListener lifecycleListener) {
         Preconditions.isNotNull(executorService, "executorService");
         Preconditions.isTrue(!executorService.isShutdown(), "executorService must not be shutdown");
-        Preconditions.isNotNull(watchRegistrationFactory, "watchRegistrationFactory");
+        Preconditions.isNotNull(lifecycleListener, "lifecycleListener");
         this.executorService = executorService;
+        this.globalLifecycleListener = lifecycleListener;
         this.watchRegistrationFactory = watchRegistrationFactory;
     }
 
@@ -61,8 +83,8 @@ public final class PathWatcherFactory {
     }
 
     /**
-     * Creates a new <code>PathWatcher</code> that can watch the provided root path but none of its subdirectories. Note
-     * that the <code>PathWatcher</code> does not watch before {@link PathWatcher#start()} is invoked.
+     * Creates a new <code>PathWatcher</code> that can watch the provided root path but none of its subdirectories.
+     * Note that the <code>PathWatcher</code> does not watch before {@link PathWatcher#start()} is invoked.
      *
      * @param rootPath The root path to watch. It has to be a readable directory. The directory has to exist when this
      *                 method is called. Must not be null.
@@ -77,30 +99,35 @@ public final class PathWatcherFactory {
     }
 
     private PathWatcher createWatcher(Path rootPath, boolean recursive, PathChangeListener listener) {
-        //TODO: Deal with exceptions happening in background threads... -> dedicated ExceptionListener or more generic StatusListener
         PathWatcher watcherDelegate = new WatchServicePathWatcher(rootPath, watchRegistrationFactory, recursive, listener);
-        return new RunnablePathWatcherAdapter(watcherDelegate, executorService);
+        return new RunnablePathWatcherAdapter(watcherDelegate, executorService, globalLifecycleListener);
     }
 
-    private static class RunnablePathWatcherAdapter implements Runnable, PathWatcher {
+    private static final class RunnablePathWatcherAdapter implements Runnable, PathWatcher {
         private static final Logger LOG = LoggerFactory.getLogger(RunnablePathWatcherAdapter.class);
 
         private final PathWatcher delegate;
         private final ExecutorService executorService;
-        private Future<?> future;
+        private final LifecycleListener lifecycleListener;
+        // We cannot ensure that #start() and #stop() are called from the same thread.
+        // Make volatile to ensure writes are visible across threads.
+        private volatile Future<?> future;
 
         /**
          * Creates a new <code>RunnablePathWatcherAdapter</code> instance.
          *
-         * @param delegate        The <code>PathWatcher</code> instance to which this <code>PathWatcher</code> will
-         *                        delegate to. Must not be null. Must not be started or already managed by any other
-         *                        means.
-         * @param executorService The executor service that will be used to schedule the <code>delegate</code>
-         *                        PathWatcher. Must not be null.
+         * @param delegate          The <code>PathWatcher</code> instance to which this <code>PathWatcher</code> will
+         *                          delegate to. Must not be null. Must not be started or already managed by any other
+         *                          means.
+         * @param executorService   The executor service that will be used to schedule the <code>delegate</code>
+         * @param lifecycleListener Lifecycle listener that will be notified on lifecycle events of this path watcher.
          */
-        private RunnablePathWatcherAdapter(PathWatcher delegate, ExecutorService executorService) {
+        private RunnablePathWatcherAdapter(PathWatcher delegate,
+                                           ExecutorService executorService,
+                                           LifecycleListener lifecycleListener) {
             this.delegate = delegate;
             this.executorService = executorService;
+            this.lifecycleListener = lifecycleListener;
         }
 
         /**
@@ -138,20 +165,77 @@ public final class PathWatcherFactory {
         @Override
         public void run() {
             LOG.trace("About to run '{}'.", delegate);
+            Silently.run(new Block() {
+                @Override
+                public void run() {
+                    lifecycleListener.onStart(RunnablePathWatcherAdapter.this);
+                }
+            });
             try {
-                this.delegate.start();
+                delegate.start();
                 //Catch all exceptions - not just IOException. Implementation might throw other exceptions as well
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 LOG.trace("'" + delegate + "' threw an exception", e);
-                //TODO: For now, we'll just throw a raw runtime exception. Find a better base class and do something
-                //TODO: This exception gets swallowed by the thread pool. How do we communicate exceptions to callers? Via the PathChangeListener?
-
-                // Other ideas:
-                // * Client can provide some sort of ExceptionListener which will be notified
-                // * Client can call a method #isRunning() or #isWatching() on PathWatcher which might throw an ExecutionException (compare Future#get())
-
-                throw new RuntimeException(e);
+                Silently.run(new Block() {
+                    @Override
+                    public void run() {
+                        lifecycleListener.onException(RunnablePathWatcherAdapter.this, e);
+                    }
+                });
+                // we have to stop now but as we are about to exit the run loop of this runnable we have
+                // to clean up manually.
+                try {
+                    LOG.trace("Stopping '{}' due to an exception that had occurred earlier.", delegate);
+                    future = null;
+                    delegate.stop();
+                } catch (Exception ex) {
+                    LOG.trace("Could not close path watcher '" + delegate + "' properly.", ex);
+                }
+            } finally {
+                Silently.run(new Block() {
+                    @Override
+                    public void run() {
+                        lifecycleListener.onStop(RunnablePathWatcherAdapter.this);
+                    }
+                });
             }
+        }
+    }
+
+    // Utility class to safely call client classes ignoring any exceptions they might throw
+    private static final class Silently {
+        // use as if it were a logger of the outer class to hide internal implementation structure
+        private static final Logger LOG = LoggerFactory.getLogger(PathWatcherFactory.class);
+
+        public static void run(Block block) {
+            try {
+                block.run();
+            } catch (Exception ex) {
+                LOG.warn("Exception occurred.", ex);
+            }
+        }
+    }
+
+    private static interface Block {
+        void run();
+    }
+
+    private static final class NoOpLifecycleListener implements LifecycleListener {
+        public static final NoOpLifecycleListener INSTANCE = new NoOpLifecycleListener();
+
+        @Override
+        public void onStart(PathWatcher pathWatcher) {
+            // do nothing
+        }
+
+        @Override
+        public void onException(PathWatcher pathWatcher, Exception ex) {
+            // do nothing
+        }
+
+        @Override
+        public void onStop(PathWatcher pathWatcher) {
+            // do nothing
         }
     }
 }

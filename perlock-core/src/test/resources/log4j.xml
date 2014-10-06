@@ -9,7 +9,7 @@
     </appender>
 
     <root>
-        <level value="WARN"/>
+        <level value="TRACE"/>
         <appender-ref ref="stdout"/>
     </root>
 </log4j:configuration>

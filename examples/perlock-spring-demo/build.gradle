@@ -2,17 +2,15 @@ archivesBaseName = 'perlock-spring-demo'
 
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
 
     dependencies {
-        //TODO: Update library as soon as it is available. Gradle issues "The TaskContainer.add() method has been...
-        // deprecated and is scheduled to be removed in Gradle 2.0. Please use the create() method instead."
-        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.3'
     }
 }
 
-apply plugin: 'fatjar'
+apply plugin: 'eu.appsatori.fatjar'
 
 fatJar {
     manifest {

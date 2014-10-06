@@ -29,7 +29,7 @@ public interface PathWatcher {
     /**
      * <p>Request that a running <code>PathWatcher</code> stops. After the <code>PathWatcher</code> is stopped, it will
      * not watch for file system changes anymore.</p>
-     * <p/>
+     *
      * <p>Precondition: The <code>PathWatcher</code> has to be running (i.e. <code>PathWatcher#start()</code> has to be
      * invoked before calling <code>#stop()</code>). Otherwise an <code>IllegalStateException</code> will be
      * thrown.</p>

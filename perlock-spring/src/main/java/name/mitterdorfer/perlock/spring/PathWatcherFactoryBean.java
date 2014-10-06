@@ -26,8 +26,6 @@ public class PathWatcherFactoryBean implements FactoryBean<PathWatcher> {
      * @param rootPath           The root path that should be watched.
      * @param watchRecursively   true if and only if a <code>PathWatcher</code> should be created that watches subdirectories below the <code>rootPath</code> recursively.
      * @param pathChangeListener Callback that is notified when a change below the <code>rootPath</code> has occurred. Must not be null.
-     * @see name.mitterdorfer.perlock.PathWatcherFactory#createRecursiveWatcher(java.nio.file.Path, name.mitterdorfer.perlock.PathChangeListener).
-     * @see name.mitterdorfer.perlock.PathWatcherFactory#createNonRecursiveWatcher(java.nio.file.Path, name.mitterdorfer.perlock.PathChangeListener)
      */
     public PathWatcherFactoryBean(PathWatcherFactory pathWatcherFactory, Path rootPath,
                                   boolean watchRecursively, PathChangeListener pathChangeListener) {

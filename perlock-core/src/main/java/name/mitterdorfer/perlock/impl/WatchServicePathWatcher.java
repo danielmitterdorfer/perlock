@@ -78,8 +78,8 @@ public final class WatchServicePathWatcher implements PathWatcher {
     public void start() throws IOException {
         prepareWatcher();
         performRegistration();
-        watch();
         running = true;
+        watch();
     }
 
     @Override
@@ -89,15 +89,15 @@ public final class WatchServicePathWatcher implements PathWatcher {
 
     private void watch() {
         LOG.trace("Waiting for file system events");
-        boolean shouldExit = false;
-        while(!shouldExit) {
+        boolean moreKeysToProcess = true;
+        while(moreKeysToProcess && !Thread.currentThread().isInterrupted()) {
             // wait for key to be signalled
             WatchKey key = takeKey();
             if (key != null) {
                 handleKey(key);
-                shouldExit = resetKey(key);
+                moreKeysToProcess = resetKey(key);
             } else {
-                shouldExit = true;
+                moreKeysToProcess = false;
             }
         }
         //close watch service also when exiting
@@ -128,7 +128,7 @@ public final class WatchServicePathWatcher implements PathWatcher {
                     WatchEvent<Path> ev = cast(event);
                     Path name = ev.context();
                     Path child = dir.resolve(name);
-
+                    LOG.trace("Handling watch event with kind '{}' for path '{}'.", kind, child);
                     handleEvent(ev, child);
 
                     if (kind == ENTRY_CREATE) {
@@ -153,10 +153,10 @@ public final class WatchServicePathWatcher implements PathWatcher {
 
             // all directories are inaccessible
             if (keys.isEmpty()) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     @Override

@@ -30,7 +30,7 @@ You can use it with Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.2.0'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.3.0'
 }
 ```
 
@@ -40,7 +40,7 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-core</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
@@ -50,7 +50,7 @@ With Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-spring', version: '0.2.0'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-spring', version: '0.3.0'
 }
 ```
 
@@ -60,7 +60,7 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-spring</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
@@ -88,6 +88,8 @@ PathWatcher watcher = pathWatchers.createRecursiveWatcher(someRootPath, new Simp
 watcher.start();
 ```
 
+Additionally, clients may also provide an implementation of `LifecycleListener` to get notified when a `PathWatcher` starts, stops or throws an exception. By default, those events are just logged internally by Perlock.
+
 The `examples` directory contains a very small sample application that demonstrates recursive path watching in the class `PathWatcherDemo`. It also contains as `SpringPathWatcherDemo` which demonstrates how to use the Perlock-Spring integration.
 
 # Prerequisites
@@ -107,7 +109,7 @@ There are a few caveats you should be aware of when using Perlock:
 
 * The JDK 7 WatchService API is platform dependent. Therefore, path watching might be slower on platforms where WatchService falls back to polling (for example JDK 7 in Mac OS X). For a more detailed description of `WatchService` please see its [Javadoc](http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html).
 * The root path that has to exist when the corresponding `PathWatcher` is started.
-* If the root path is deleted the `PathWatcher` will be closed without any notification of the client.
+* If the root path is deleted the `PathWatcher` will be closed. Starting with Perlock 0.3.0 clients can provide a `LifecycleListener` to get notified of such events.
 
 # Alternatives
 
@@ -126,8 +128,9 @@ Relevant changes are documented in the [changelog](CHANGELOG.md). Perlock adhere
 
 The library is considered pretty much complete. However, there are still some topics that may need to be addressed:
 
-* Reporting exceptions that occurred in the watcher: This could be done with a custom callback interface but details are not settled yet.
-* Although all important NIO classes provide interfaces it is still very hard to implement in-memory filesystem tests. The project [memoryfilesystem](https://github.com/marschall/memoryfilesystem) implements an in-memory filesystem on top of JSR-203 but lacks an implementation of `WatchService`. Perlock might use memoryfilesystem in the future for in-memory filesystem tests.
+* Providing an alternative API that is more in line with NIO APIs
+
+You can also send me your ideas and suggestions. Just open an issue on Github.
 
 # License
 
