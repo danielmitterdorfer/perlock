@@ -22,7 +22,11 @@ import java.util.concurrent.Executors;
  *      <li><code>path</code> which is the path to watch</li>
  * </ol>
  *
- * If you invoke the sample application as follows, it watches the home folder (on Unix): <code>java -jar perlock-examples.jar --non-recursive ~</code>
+ * If you invoke the sample application as follows, it watches the home folder (on Unix):
+ *
+ * <code>java -jar examples/perlock-simple-demo/build/libs/perlock-path-watcher-demo-$VERSION.jar --non-recursive ~</code>
+ *
+ * To build the demo application, run <code>gradle fatJar</code>.
  */
 public class PathWatcherDemo implements PathChangeListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(PathWatcherDemo.class);

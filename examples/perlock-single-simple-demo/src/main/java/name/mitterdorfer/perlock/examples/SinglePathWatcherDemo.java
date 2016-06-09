@@ -16,7 +16,11 @@ import java.nio.file.Paths;
  *      <li><code>path</code> which is the path to watch</li>
  * </ol>
  *
- * If you invoke the sample application as follows, it watches myfile.txt in the home folder (on Unix): <code>java -jar perlock-examples.jar ~/myfile.txt</code>
+ * If you invoke the sample application as follows, it watches myfile.txt in the home folder (on Unix):
+ *
+ * <code>java -jar examples/perlock-single-simple-demo/build/libs/perlock-single-path-watcher-demo-$VERSION.jar ~/myfile.txt</code>
+ *
+ * To build the demo application, run <code>gradle fatJar</code>.
  */
 public class SinglePathWatcherDemo {
     private static final Logger LOGGER = LoggerFactory.getLogger(SinglePathWatcherDemo.class);
@@ -29,7 +33,7 @@ public class SinglePathWatcherDemo {
         Path path = Paths.get(pathName).toAbsolutePath();
 
         PathWatcher watcher = PathWatcherFactory.createSinglePathWatcher(path,
-                (eventKind, p) -> LOGGER.info("Event: {}", eventKind)).start();
+                (eventKind, p) -> LOGGER.info("Event: {} {}", eventKind, p)).start();
 
 
         //noinspection ResultOfMethodCallIgnored

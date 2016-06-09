@@ -30,7 +30,7 @@ You can use it with Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.3.0'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-core', version: '0.3.1'
 }
 ```
 
@@ -40,7 +40,7 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-core</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
@@ -50,7 +50,7 @@ With Gradle:
 
 ```groovy
 dependencies {
-    compile group: 'name.mitterdorfer.perlock', name: 'perlock-spring', version: '0.3.0'
+    compile group: 'name.mitterdorfer.perlock', name: 'perlock-spring', version: '0.3.1'
 }
 ```
 
@@ -60,7 +60,7 @@ or alternatively via Maven.
 <dependency>
     <groupId>name.mitterdorfer.perlock</groupId>
     <artifactId>perlock-spring</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 

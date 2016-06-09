@@ -1,6 +1,12 @@
 Perlock Changelog
 ==================
 
+Changes in version 0.3.1 (2016-06-09)
+-------------------------------------
+
+* Add ability to watch only a single path (file or directory). Contributed by @magJ
+
+
 Changes in version 0.3.0 (2014-10-06)
 -------------------------------------
 

@@ -23,7 +23,9 @@ import java.util.concurrent.Executors;
  * First build the demo with <code>gradle fatJar</code>. If you invoke the sample application as follows, it watches
  * the home and the /tmp folder (on Unix):
  *
- * <code>java -jar examples/perlock-multipath-demo/build/libs/perlock-multipath-demo-0.2.0.jar --non-recursive ~ /tmp</code>
+ * <code>java -jar examples/perlock-multipath-demo/build/libs/perlock-multipath-demo-$VERSION.jar --non-recursive ~ /tmp</code>
+ *
+ *
  */
 public class MultiPathWatcherDemo {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiPathWatcherDemo.class);

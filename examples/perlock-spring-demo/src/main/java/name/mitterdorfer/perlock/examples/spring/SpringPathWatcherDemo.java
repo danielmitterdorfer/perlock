@@ -10,9 +10,15 @@ import java.io.IOException;
 /**
  * Main entry point for the Spring demo application. It starts a path watcher for "/tmp" that will check for XML files.
  *
- * To try the demo, start the application and then issue the following command in a shell in the "/tmp" directory:
+ * To try the demo, start the application:
+ *
+ * <code>java -jar examples/perlock-single-simple-demo/build/libs/perlock-spring-demo-$VERSION.jar</code>
+ *
+ * And then issue the following command in a shell in the "/tmp" directory:
  *
  * "touch hello{1,2,3}.xml &amp;&amp; sleep 2 &amp;&amp; touch hello{4,5,6}.xml"
+ *
+ * To build the demo application, run <code>gradle fatJar</code>.
  *
  */
 public class SpringPathWatcherDemo {

@@ -2,7 +2,7 @@ defaultTasks "build"
 
 configure(allprojects) {
     group = 'name.mitterdorfer.perlock'
-    version = '0.3.0'
+    version = '0.3.1'
 
     ext.slf4jVersion = '1.7.5'
     ext.log4jVersion = '1.2.17'
