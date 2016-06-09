@@ -1,9 +1,5 @@
 package name.mitterdorfer.perlock;
 
-import name.mitterdorfer.perlock.LifecycleListener;
-import name.mitterdorfer.perlock.PathWatcher;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;

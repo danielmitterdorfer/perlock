@@ -8,7 +8,7 @@ configure(allprojects) {
     ext.log4jVersion = '1.2.17'
     ext.junitVersion = '4.11'
     ext.mockitoVersion = '1.9.5'
-    ext.jimfsVersion = '1.0'
+    ext.jimfsVersion = '1.1'
 
     apply plugin: 'java'
     apply plugin: 'idea'

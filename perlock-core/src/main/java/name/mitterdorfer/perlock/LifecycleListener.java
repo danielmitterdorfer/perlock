@@ -9,9 +9,8 @@ package name.mitterdorfer.perlock;
  */
 public interface LifecycleListener {
     /**
-     * Called when a path watcher is about to start. It is unspecified whether the provided path watcher is already
-     * running in the exact moment when this method is called (i.e. pathWatcher#isRunning() may or may not return
-     * true).
+     * Called when a path watcher is actively watching for events. It is safe to assume any changes to files
+     * within the path will be picked up by the path watcher after this event has been fired.
      *
      * @param pathWatcher The path watcher that is about to start. Must not be null.
      */

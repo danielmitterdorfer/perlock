@@ -1,5 +1,6 @@
 package name.mitterdorfer.perlock.examples;
 
+import name.mitterdorfer.perlock.EventKind;
 import name.mitterdorfer.perlock.PathChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,17 +14,8 @@ public final class LoggingPathChangeListener implements PathChangeListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingPathChangeListener.class);
 
     @Override
-    public void onPathCreated(Path path) {
-        LOGGER.info("Created '" + path + "'");
+    public void onPathChanged(EventKind eventKind, Path path) {
+        LOGGER.info("{} '{}'", eventKind.name(), path);
     }
 
-    @Override
-    public void onPathModified(Path path) {
-        LOGGER.info("Modified '" + path + "'");
-    }
-
-    @Override
-    public void onPathDeleted(Path path) {
-        LOGGER.info("Deleted '" + path + "'");
-    }
 }

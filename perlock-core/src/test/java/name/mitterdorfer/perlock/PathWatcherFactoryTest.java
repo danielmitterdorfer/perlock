@@ -2,6 +2,7 @@ package name.mitterdorfer.perlock;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import com.google.common.jimfs.WatchServiceConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,15 +13,16 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PathWatcherFactoryTest {
-    // as starting/stop happens in the background we might miss events. Wait a bit...
+    // as stop happens in the background we might miss events. Wait a bit...
     private static final long TIME_GAP_LIFE_CYCLE = 100L;
-    // Jimfs polls only every 5 seconds...
-    private static final long TIME_GAP_POLL_INTERVAL = 5500L;
+    // Jimfs polls only every 100 milliseconds...
+    private static final long TIME_GAP_POLL_INTERVAL = 150L;
 
     private Path rootPath;
     private PathWatcherFactory pathWatcherFactory;
@@ -29,7 +31,8 @@ public class PathWatcherFactoryTest {
 
     @Before
     public void setUp() throws Exception {
-        FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+        WatchServiceConfiguration wsc = WatchServiceConfiguration.polling(100, TimeUnit.MILLISECONDS);
+        FileSystem fs = Jimfs.newFileSystem(Configuration.unix().toBuilder().setWatchServiceConfiguration(wsc).build());
         rootPath = fs.getPath("/rootPath");
         Files.createDirectory(rootPath);
 
@@ -44,7 +47,6 @@ public class PathWatcherFactoryTest {
         PathWatcher watcher = pathWatcherFactory.createNonRecursiveWatcher(rootPath, pathChangeListener);
         assertFalse(watcher.isRunning());
         watcher.start();
-        Thread.sleep(TIME_GAP_LIFE_CYCLE);
         assertTrue(watcher.isRunning());
 
         Path fileInRootPath = rootPath.resolve("text.txt");
@@ -78,7 +80,6 @@ public class PathWatcherFactoryTest {
         PathWatcher watcher = pathWatcherFactory.createRecursiveWatcher(rootPath, pathChangeListener);
         assertFalse(watcher.isRunning());
         watcher.start();
-        Thread.sleep(TIME_GAP_LIFE_CYCLE);
         assertTrue(watcher.isRunning());
 
         Path fileInRootPath = rootPath.resolve("text.txt");
@@ -137,8 +138,8 @@ public class PathWatcherFactoryTest {
         pathChangeListener.assertNoEvents();
 
         watcher.start();
-        Thread.sleep(TIME_GAP_LIFE_CYCLE);
         assertTrue(watcher.isRunning());
+        Thread.sleep(TIME_GAP_LIFE_CYCLE);
         lifecycleListener.assertOnStartCalled();
         lifecycleListener.assertOnStopNotCalled();
 
@@ -165,15 +166,16 @@ public class PathWatcherFactoryTest {
     public void testRogueListener() throws Exception {
         final RuntimeException testException = new RuntimeException("exception by rogue listener");
         testException.setStackTrace(new StackTraceElement[0]);
-        PathWatcher watcher = pathWatcherFactory.createNonRecursiveWatcher(rootPath, new AbstractPathChangeListener() {
+        PathWatcher watcher = pathWatcherFactory.createNonRecursiveWatcher(rootPath, new PathChangeListener() {
             @Override
-            public void onPathCreated(Path path) {
-                throw testException;
+            public void onPathChanged(EventKind eventKind, Path path) {
+                if(eventKind == EventKind.CREATE){
+                    throw testException;
+                }
             }
         });
         assertFalse(watcher.isRunning());
         watcher.start();
-        Thread.sleep(TIME_GAP_LIFE_CYCLE);
         assertTrue(watcher.isRunning());
 
         Path fileInRootPath = rootPath.resolve("text.txt");

@@ -1,5 +1,6 @@
 package name.mitterdorfer.perlock.impl;
 
+import name.mitterdorfer.perlock.EventKind;
 import name.mitterdorfer.perlock.impl.watch.WatchRegistrationFactory;
 import name.mitterdorfer.perlock.impl.util.Preconditions;
 import name.mitterdorfer.perlock.impl.watch.WatchRegistrationStrategy;
@@ -39,7 +40,10 @@ public final class WatchServicePathWatcher implements PathWatcher {
     // due to #isRunning() we need visibility of running across threads...
     private volatile boolean running;
 
-    public WatchServicePathWatcher(Path rootPath, WatchRegistrationFactory factory, boolean recursive, PathChangeListener listener) {
+    public WatchServicePathWatcher(Path rootPath,
+                                   WatchRegistrationFactory factory,
+                                   boolean recursive,
+                                   PathChangeListener listener) {
         Preconditions.isNotNull(rootPath, "rootPath");
         Preconditions.isNotNull(factory, "factory");
         Preconditions.isNotNull(listener, "listener");
@@ -75,11 +79,11 @@ public final class WatchServicePathWatcher implements PathWatcher {
      * Process all events for keys queued to the watcher
      */
     @Override
-    public void start() throws IOException {
+    public PathWatcher start() throws IOException {
         prepareWatcher();
         performRegistration();
         running = true;
-        watch();
+        return this;
     }
 
     @Override
@@ -87,7 +91,7 @@ public final class WatchServicePathWatcher implements PathWatcher {
         return running;
     }
 
-    private void watch() {
+    public void watch() {
         LOG.trace("Waiting for file system events");
         boolean moreKeysToProcess = true;
         while(moreKeysToProcess && !Thread.currentThread().isInterrupted()) {
@@ -129,7 +133,7 @@ public final class WatchServicePathWatcher implements PathWatcher {
                     Path name = ev.context();
                     Path child = dir.resolve(name);
                     LOG.trace("Handling watch event with kind '{}' for path '{}'.", kind, child);
-                    handleEvent(ev, child);
+                    listener.onPathChanged(EventKind.eventKindForWatchEventKind(ev.kind()), child);
 
                     if (kind == ENTRY_CREATE) {
                         try {
@@ -138,6 +142,8 @@ public final class WatchServicePathWatcher implements PathWatcher {
                             LOG.warn("Could not register watch for '{}'.", child);
                         }
                     }
+                } else {
+                    LOG.warn("Watch service event overflow.");
                 }
             }
         } else {
@@ -174,18 +180,6 @@ public final class WatchServicePathWatcher implements PathWatcher {
             this.keys.clear();
             //we're not running anymore
             this.running = false;
-        }
-    }
-
-    private void handleEvent(WatchEvent<Path> event, Path child) {
-        if (event.kind().equals(ENTRY_CREATE)) {
-            listener.onPathCreated(child);
-        } else if (event.kind().equals(ENTRY_MODIFY)) {
-            listener.onPathModified(child);
-        } else if (event.kind().equals(ENTRY_DELETE)) {
-            listener.onPathDeleted(child);
-        } else {
-            throw new IllegalArgumentException("Unrecognized event kind '" + event.kind() + "'.");
         }
     }
 

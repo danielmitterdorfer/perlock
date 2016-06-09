@@ -17,7 +17,7 @@ public interface PathWatcher {
      * @throws IllegalStateException If <code>#start()</code> is invoked on an already running
      *                               <code>PathWatcher</code>.
      */
-    void start() throws IOException;
+    PathWatcher start() throws IOException;
 
     /**
      * Determines whether this <code>PathWatcher</code> instance is currently running.

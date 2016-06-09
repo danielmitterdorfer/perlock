@@ -1,7 +1,5 @@
 package name.mitterdorfer.perlock;
 
-import name.mitterdorfer.perlock.PathChangeListener;
-
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
@@ -14,49 +12,39 @@ public class AssertingPathChangeListener implements PathChangeListener {
     private final Set<Event> events = Collections.newSetFromMap(new ConcurrentHashMap<Event, Boolean>());
 
     @Override
-    public void onPathCreated(Path path) {
-        this.events.add(new Event(path, Kind.CREATE));
-    }
-
-    @Override
-    public void onPathModified(Path path) {
-        this.events.add(new Event(path, Kind.MODIFY));
-    }
-
-    @Override
-    public void onPathDeleted(Path path) {
-        this.events.add(new Event(path, Kind.DELETE));
+    public void onPathChanged(EventKind eventKind, Path path) {
+        this.events.add(new Event(path, eventKind));
     }
 
     public void assertPathCreated(Path path) {
-        assertEvent(path, Kind.CREATE);
+        assertEvent(path, EventKind.CREATE);
     }
 
     public void assertPathNotCreated(Path path) {
-        assertNoEvent(path, Kind.CREATE);
+        assertNoEvent(path, EventKind.CREATE);
     }
 
     public void assertPathModified(Path path) {
-        assertEvent(path, Kind.MODIFY);
+        assertEvent(path, EventKind.MODIFY);
     }
 
     public void assertPathNotModified(Path path) {
-        assertNoEvent(path, Kind.MODIFY);
+        assertNoEvent(path, EventKind.MODIFY);
     }
 
     public void assertPathDeleted(Path path) {
-        assertEvent(path, Kind.DELETE);
+        assertEvent(path, EventKind.DELETE);
     }
 
     public void assertPathNotDeleted(Path path) {
-        assertNoEvent(path, Kind.DELETE);
+        assertNoEvent(path, EventKind.DELETE);
     }
 
-    private void assertEvent(Path path, Kind kind) {
+    private void assertEvent(Path path, EventKind kind) {
         assertTrue("Expected event '" + kind + "' for path '" + path + "' is missing.", events.contains(new Event(path, kind)));
     }
 
-    private void assertNoEvent(Path path, Kind kind) {
+    private void assertNoEvent(Path path, EventKind kind) {
         assertFalse("Unexpected event '" + kind + "' for path '" + path + "' found.", events.contains(new Event(path, kind)));
     }
 
@@ -70,18 +58,13 @@ public class AssertingPathChangeListener implements PathChangeListener {
         assertPathNotDeleted(path);
     }
 
-
-    private static enum Kind {
-        CREATE, MODIFY, DELETE
-    }
-
     private static class Event {
         private final Path path;
-        private final Kind kind;
+        private final EventKind eventKind;
 
-        private Event(Path path, Kind kind) {
+        private Event(Path path, EventKind eventKind) {
             this.path = path;
-            this.kind = kind;
+            this.eventKind = eventKind;
         }
 
         @Override
@@ -91,16 +74,15 @@ public class AssertingPathChangeListener implements PathChangeListener {
 
             Event event = (Event) o;
 
-            if (kind != event.kind) return false;
-            if (!path.equals(event.path)) return false;
+            if (path != null ? !path.equals(event.path) : event.path != null) return false;
+            return eventKind == event.eventKind;
 
-            return true;
         }
 
         @Override
         public int hashCode() {
-            int result = path.hashCode();
-            result = 31 * result + kind.hashCode();
+            int result = path != null ? path.hashCode() : 0;
+            result = 31 * result + (eventKind != null ? eventKind.hashCode() : 0);
             return result;
         }
     }
